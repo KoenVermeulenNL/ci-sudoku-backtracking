@@ -1,0 +1,14 @@
+C:\Users\koenv\Documents\Projects\UU\Compi\ci-practicum1\CI-Practicum1\bin\Debug\net7.0\CI-Practicum1.exe
+C:\Users\koenv\Documents\Projects\UU\Compi\ci-practicum1\CI-Practicum1\bin\Debug\net7.0\CI-Practicum1.deps.json
+C:\Users\koenv\Documents\Projects\UU\Compi\ci-practicum1\CI-Practicum1\bin\Debug\net7.0\CI-Practicum1.runtimeconfig.json
+C:\Users\koenv\Documents\Projects\UU\Compi\ci-practicum1\CI-Practicum1\bin\Debug\net7.0\CI-Practicum1.dll
+C:\Users\koenv\Documents\Projects\UU\Compi\ci-practicum1\CI-Practicum1\bin\Debug\net7.0\CI-Practicum1.pdb
+C:\Users\koenv\Documents\Projects\UU\Compi\ci-practicum1\CI-Practicum1\obj\Debug\net7.0\CI-Practicum1.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\koenv\Documents\Projects\UU\Compi\ci-practicum1\CI-Practicum1\obj\Debug\net7.0\CI-Practicum1.AssemblyInfoInputs.cache
+C:\Users\koenv\Documents\Projects\UU\Compi\ci-practicum1\CI-Practicum1\obj\Debug\net7.0\CI-Practicum1.AssemblyInfo.cs
+C:\Users\koenv\Documents\Projects\UU\Compi\ci-practicum1\CI-Practicum1\obj\Debug\net7.0\CI-Practicum1.csproj.CoreCompileInputs.cache
+C:\Users\koenv\Documents\Projects\UU\Compi\ci-practicum1\CI-Practicum1\obj\Debug\net7.0\CI-Practicum1.dll
+C:\Users\koenv\Documents\Projects\UU\Compi\ci-practicum1\CI-Practicum1\obj\Debug\net7.0\refint\CI-Practicum1.dll
+C:\Users\koenv\Documents\Projects\UU\Compi\ci-practicum1\CI-Practicum1\obj\Debug\net7.0\CI-Practicum1.pdb
+C:\Users\koenv\Documents\Projects\UU\Compi\ci-practicum1\CI-Practicum1\obj\Debug\net7.0\CI-Practicum1.genruntimeconfig.cache
+C:\Users\koenv\Documents\Projects\UU\Compi\ci-practicum1\CI-Practicum1\obj\Debug\net7.0\ref\CI-Practicum1.dll
