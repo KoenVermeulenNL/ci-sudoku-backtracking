@@ -1,4 +1,4 @@
-﻿//2.2 forward checking part 1
+﻿//2.2 forward checking part 1 
 
 using System;
 using System.Reflection;
