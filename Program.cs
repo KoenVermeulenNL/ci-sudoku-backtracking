@@ -2,6 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+using System.Data.SqlTypes;
+using System.Diagnostics.Metrics;
 using System.Drawing;
 using System.IO;
 using System.Reflection;
@@ -12,387 +15,84 @@ class Program
 {
     static void Main()
     {
-        int evaluation_value;
-        int[,] sudoku = new int[9, 9];
-        int[,] static_sudoku = new int[9, 9];
-        int[,] block_bool = new int[3, 3];
-        int block_bool_full;
-        int switches;
+        int[,] sudoku = new int[9, 9];                                                  //De sudoku die ingevuld gaat worden
+        int[,] statiche_sudoku = new int[9, 9];                                         //Een "statische" sudoku om bij te houden welke cijfers in de sudoku vanaf het begin al vaststaan
 
-        import();
+        backtracking();
 
-        //Import() is de enige functie die aangeroepen wordt in Main(), hierin wordt de inpu-file gelezen en wordt het algoritme uitgevoerd (dit kunnen we nog scheiden)
-        void import()
+        //De functie die verantwoordelijk is voor chronological backtracking
+        void backtracking()
         {
             int index;
-            int counter;
             string[] woorden;
             char[] separators = { ' ' };
             string regel;
+            StreamReader sr = new StreamReader("../../../TextFile1.txt");
 
-            StreamReader sr = new StreamReader("../../../sudokus.txt");
-
+            //1 regel representeerd 1 sudoku
+            //split de regel en zet het om naar een sudoku bord
             while ((regel = sr.ReadLine()) != null)
             {
-                //1 regel representeerd 1 sudoku
-                //split de regel en zet het om naar een sudoku bord
                 woorden = regel.Split(separators, StringSplitOptions.RemoveEmptyEntries);
                 if (woorden.Length == 81)
                 {
-                    //valid sudoku
-
                     index = 0;
-                    for (int y = 0; y < 9; y++)
+                    for (int y = 0; y < 9; y++)                                         //In deze dubbele for-loop worden de sudokus ingevuld van de textfile
                         for (int x = 0; x < 9; x++)
                         {
                             sudoku[x, y] = int.Parse(woorden[index]);
-                            static_sudoku[x, y] = int.Parse(woorden[index]);
+                            statiche_sudoku[x, y] = int.Parse(woorden[index]);
                             index++;
                         }
 
                     //print de originele input
-                    printSudoku(static_sudoku);
+                    Console.WriteLine();
+                    printSudoku(statiche_sudoku);                                       //hier wordt de oningevulde sudoku geprint
                     Console.WriteLine();
 
-                    //setup timer
-                    double setupTime = 0;
-                    double totalTime = 0;
-                    var setupTimer = System.Diagnostics.Stopwatch.StartNew();
-
-                    //De sudoko wordt at random zo ingevuld dat in alle 9 blokken de cijfers 1 t/m 9 staan, maar dus nog niet in de rijen/kolommen
-                    random_start();
-
-                    //Evaluatie van het aanvankelijk at random gegenereerde sudokubord
-                    initial_evaluation();
-
-                    //We blijven de sudoku opnieuw at random invullen totdat we een initiële evaluatiewaarde hebben lager dan 30
-                    while (evaluation_value > 30)
-                    {
-                        random_start();
-                        initial_evaluation();
-                    }
-
-                    setupTimer.Stop();
-                    setupTime += Math.Round(setupTimer.Elapsed.TotalMilliseconds);
-                    totalTime += setupTime;
-
-                    //Visualisatie van de at random ingevulde sudoku en de statische sudoku waarin alleen de beginwaarden staan, samen met de nullen
-                    printSudoku(sudoku);
-                    Console.WriteLine();
-
-                    Console.WriteLine($"Evalutation: {evaluation_value}, Time to setup: {setupTime}ms, Total time: {totalTime}ms");
-
-
-                    //setup timer
-                    double switchTime = 0;
-                    var switchTimer = System.Diagnostics.Stopwatch.StartNew();
-
-                    //start switching
-                    switches = 0;
-
-                    //Zolang de sudoku nog niet opgelost is worden er cijfers binnen vakken geswitcht en wordt er bij een plateau of lokaal maximum een random walk geïnitieerd
-                    while (evaluation_value != 0)
-                    {
-                        //Deze variabelen houden respectievelijk bij in welke blokken er nog switches zijn die de evaluatiewaarde verkleinen en hoeveel blokken dit zijn
-                        block_bool = new int[3, 3];
-                        block_bool_full = 0;
-
-                        //Zolang er nog blokken met switches zijn die de evaluatiewaarde verkleinen worden deze switches uitgevoerd
-                        while (block_bool_full != 9)
+                    for (int y = 0; y < 9; y++)                                         //In deze dubbele for-loop worden alle vakjes een voor een ingevuld door middel van chronological backtracking
+                        for (int x = 0; x < 9; x++)
                         {
-
-                            //De volgende code zorgt ervoor dat er een random blok wordt gekozen om in te switchen uit de blokken waarvan we niet al gezien hebben
-                            // dat er geen nuttige switches meer over zijn
-                            List<(int, int)> random_number = new List<(int, int)> { (0, 0), (0, 3), (0, 6), (3, 0), (3, 3), (3, 6), (6, 0), (6, 3), (6, 6) };
-                            counter = 8;
-                            for (int x = 2; x > -1; x--)
-                                for (int y = 2; y > -1; y--)
+                            if (statiche_sudoku[x, y] == 0)                             //Alleen vakjes gaan invullen die ingevuld mogen worden
+                            {
+                                bool correct = false;
+                                while (correct == false)                                //Alleen doorgaan naar het volgende vakje als het huidige vakje goed ingevuld is. Als dit niet het geval is moeten we een vakje naar achteren (Daar is de functie block_achteruit voor)
                                 {
-                                    if (block_bool[x, y] == 1)
+                                    if (sudoku[x, y] == 0)                              //Als het vakje waar we naar kijken nog nooit bekeken is moeten we van 1 beginnen. Zo niet moeten we beginnen bij de waarde van het vakje +1, omdat de waardes daarvoor al zijn geevalueerd (dit gebeurt bij de else part).
                                     {
-                                        random_number.RemoveAt(counter);
+                                        int ingevuld_nummer = 1;                                            //Beginnen bij 1
+                                        bool nog_niet_correct = true;
+                                        correct = invullen(ingevuld_nummer, nog_niet_correct, x, y);        //Als correct true is is er een waarde voor het het huidige vakje die de regels van sudoku niet schendt. Als correct false is is er geen correcte waarde van 1 t/m 9 en moeten we een vakje terug.  
+                                        if (invullen(ingevuld_nummer, nog_niet_correct, x, y) == false)     //Hier gaan we doormiddel van de functie block_achteruit een waarde terug als er geen geldige waarde is voor het huidige vakje
+                                        {
+                                            Point aangepaste_coordinaten = block_achteruit(x, y);           //Een vakje achteruit gaan (het zou kunnen dat je meerdere vakjes achteruit gaat als je te maken hebt met een vakje waar een waarde in staat die niet verandert mag worden)
+                                            x = aangepaste_coordinaten.X;                                   //Coordinaten worden aangepasst
+                                            y = aangepaste_coordinaten.Y;
+                                        }
                                     }
-                                    counter--;
+                                    else                                                //Als het huidige vakje niet de waarde 0 heeft hoeven we niet te beginnen vanaf 1, want sommige waarden zijn al uitgeprobeert. Daarom beginnnen we vanaf 1 + de waarde van het vakje.
+                                    {
+                                        int ingevuld_nummer = 1 + sudoku[x, y];                             //1 + de waarde van het huidige vakje wordt de nieuwe waarde
+                                        bool nog_niet_correct = true;
+                                        correct = invullen(ingevuld_nummer, nog_niet_correct, x, y);        //vanaf hier, zelfde concept als bij de if loop.
+                                        if (invullen(ingevuld_nummer, nog_niet_correct, x, y) == false)
+                                        {
+                                            Point aangepaste_coordinaten = block_achteruit(x, y);
+                                            x = aangepaste_coordinaten.X;
+                                            y = aangepaste_coordinaten.Y;
+                                        }
+
+                                    }
                                 }
-
-                            Random random = new Random();
-                            int random_block = random.Next(0, random_number.Count);
-                            int random_x_block = random_number[random_block].Item1;
-                            int random_y_block = random_number[random_block].Item2;
-
-                            //De switch functie wordt telkens at random aangeroepen om in een van deze blokken de beste switch uit te voeren
-                            switch_function(random_x_block, random_y_block);
-                        }
-
-                        //Als er geen nuttige switches meer zijn worden er random switches uitgevoerd (op het moment 3)
-                        if (evaluation_value != 0)
-                        {
-                            for (int i = 0; i < 3; i++)
-                            {
-                                random_walk();
                             }
                         }
-                    }
-
-                    switchTimer.Stop();
-                    switchTime += Math.Round(switchTimer.Elapsed.TotalMilliseconds);
-                    totalTime += switchTime;
-
                     //Visualisatie
-                    printSudoku(sudoku);
-                    Console.WriteLine();
-                    Console.WriteLine($"evaluation number: {evaluation_value}, Time to switch: {switchTime}ms, Total time: {totalTime}ms");
-                    Console.WriteLine(switches);
+                    printSudoku(sudoku);                                                //Nadat de hele sudoku correct is ingevuld, wordt de sudoku geprint
                 }
             }
         }
 
-        void random_start()
-        {
-            List<int> availableNumbers;
-
-            //initialize the sudoku board
-
-            //fill every x and y which are the spaces (0) with a random value
-            //and evaluate if the blocks are valid
-
-            //we do this by looping through all blocks in the sudoku
-            //3 horizonal and 3 vertical blocks, each containing 3 x and 3 y values
-            for (int block_y = 0; block_y < 3; block_y++)
-            {
-                for (int block_x = 0; block_x < 3; block_x++)
-                {
-                    fillBlock(block_x, block_y);
-                }
-            }
-
-
-            void fillBlock(int block_x, int block_y)
-            {
-                //set the contains list to track which numbers are already present in the block
-                availableNumbers = new List<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-
-                //within a block go through the xs and ys of that block
-                //for this we need another 2 loops of each 3 iterations to account for the 3 xs and ys of the block
-
-                //first we will loop through the loop to note the already present values:
-                for (int relative_y = 0; relative_y < 3; relative_y++)
-                {
-                    for (int relative_x = 0; relative_x < 3; relative_x++)
-                    {
-                        int absolute_x = block_x * 3 + relative_x;
-                        int absolute_y = block_y * 3 + relative_y;
-                        int cordValue = static_sudoku[absolute_x, absolute_y];
-
-                        if (cordValue != 0)
-                        {
-                            //there is a number predefined in the input
-                            //remove this value from the available numbers
-                            availableNumbers.Remove(cordValue);
-                        }
-                    }
-                }
-
-                for (int relative_y = 0; relative_y < 3; relative_y++)
-                {
-                    for (int relative_x = 0; relative_x < 3; relative_x++)
-                    {
-                        int absolute_x = block_x * 3 + relative_x;
-                        int absolute_y = block_y * 3 + relative_y;
-
-                        //first remove the already filled in values from the availableNumbers list
-                        int cordValue = static_sudoku[absolute_x, absolute_y];
-
-                        if (cordValue == 0 && availableNumbers.Count > 0)
-                        {
-                            //the number is not predefined and there are still numbers available
-
-                            //generate a new random value that is still available
-                            Random random = new Random();
-                            int newValueIndex = random.Next(0, availableNumbers.Count);
-                            int newValue = availableNumbers[newValueIndex];
-
-                            //set this new value to the new sudoku board
-                            sudoku[absolute_x, absolute_y] = newValue;
-
-                            //update the available nubmers
-                            availableNumbers.Remove(newValue);
-                        }
-                    }
-                }
-            }
-        }
-
-        //De initiële evaluatiewaarde wordt berekend door voor elke rij en elke kolom (9-c) op te tellen, waarbij c het aantal getallen is wat tenminste 
-        // één keer voorkomt
-        void initial_evaluation()
-        {
-            HashSet<int> contains = new HashSet<int>();
-            int current_number = 0;
-
-            evaluation_value = 0;
-            for (int y = 0; y < 9; y++)
-            {
-                contains.Clear();
-                for (int x = 0; x < 9; x++)
-                {
-                    current_number = sudoku[x, y];
-                    contains.Add(current_number);
-                }
-                evaluation_value += 9 - contains.Count;
-            }
-            for (int x = 0; x < 9; x++)
-            {
-                contains.Clear();
-                for (int y = 0; y < 9; y++)
-                {
-                    current_number = sudoku[x, y];
-                    contains.Add(current_number);
-                }
-                evaluation_value += 9 - contains.Count;
-            }
-        }
-
-        void switch_function(int a, int b)
-        {
-            //Parameters a en b worden meegegeven en zijn de random blokken waarin geswitcht gaat worden    
-            int random_x_block = a;
-            int random_y_block = b;
-            int best_value, best_number1_x, best_number1_y, best_number2_x, best_number2_y;
-            best_value = 0;
-            best_number1_x = -1; best_number1_y = -1; best_number2_x = -1; best_number2_y = -1;
-            //Deze variabelen moeten een waarde krijgen ondanks dat ze niet gebruikt worden als er geen nuttige switch in het blok gevonden wordt
-
-            //Elke switch wordt geëvalueerd door de switch uit te voeren en te kijken naar het effect op de evaluatiewaarde
-            for (int y1 = 0; y1 < 3; y1++)
-            {
-                for (int x1 = 0; x1 < 3; x1++)
-                {
-                    for (int y2 = y1; y2 < 3; y2++)
-                    {
-                        for (int x2 = 0; x2 < 3; x2++)
-                        {
-                            //Deze constraints zorgen ervoor dat alleen switches die mogen en nog niet in deze loop zijn getest worden getest
-                            if (static_sudoku[random_x_block + x1, random_y_block + y1] == 0 && static_sudoku[random_x_block + x2, random_y_block + y2] == 0 &&
-                                ((y1 == y2 && x1 < x2) || (y1 < y2)))
-                            {
-                                int evaluation_before_switch = evaluation(random_x_block + x1, random_y_block + y1, random_x_block + x2, random_y_block + y2);
-
-                                int switching_num1 = sudoku[random_x_block + x1, random_y_block + y1];
-                                int switching_num2 = sudoku[random_x_block + x2, random_y_block + y2];
-                                sudoku[random_x_block + x1, random_y_block + y1] = switching_num2;
-                                sudoku[random_x_block + x2, random_y_block + y2] = switching_num1;
-
-                                int evaluation_after_switch = evaluation(random_x_block + x1, random_y_block + y1, random_x_block + x2, random_y_block + y2);
-                                int test_value = evaluation_before_switch - evaluation_after_switch;
-
-                                //Als een switch positief en beter dan de tot dan toe beste blijkt te zijn wordt dit geupdate
-                                if (test_value > best_value)
-                                {
-                                    best_value = test_value;
-                                    best_number1_x = x1;
-                                    best_number1_y = y1;
-                                    best_number2_x = x2;
-                                    best_number2_y = y2;
-                                }
-
-                                //Hierna wordt er weer teruggeswitcht om door te gaan met testen
-                                sudoku[random_x_block + x1, random_y_block + y1] = switching_num1;
-                                sudoku[random_x_block + x2, random_y_block + y2] = switching_num2;
-                            }
-                        }
-                    }
-                }
-            }
-            //Als er minstens een positieve switch is wordt de beste uitgevoerd
-            if (best_number1_x != -1)
-            {
-                evaluation_value -= evaluation(random_x_block + best_number1_x, random_y_block + best_number1_y, random_x_block + best_number2_x, random_y_block + best_number2_y);
-                int switching_num1 = sudoku[best_number1_x + random_x_block, best_number1_y + random_y_block];
-                int switching_num2 = sudoku[best_number2_x + random_x_block, best_number2_y + random_y_block];
-                sudoku[best_number1_x + random_x_block, best_number1_y + random_y_block] = switching_num2;
-                sudoku[best_number2_x + random_x_block, best_number2_y + random_y_block] = switching_num1;
-                block_bool = new int[3, 3];     //Deze wordt gereset omdat er na een switch weer nieuwe mogelijke positieve switches kunnen ontstaan
-                block_bool_full = 0;
-
-                //De evaluatiewaarde wordt geupdate
-                evaluation_value += evaluation(random_x_block + best_number1_x, random_y_block + best_number1_y, random_x_block + best_number2_x, random_y_block + best_number2_y);
-                switches += 1;
-            }
-
-            //Als er geen positieve switch gevonden is wordt dit genoteerd
-            if (best_number1_x == -1)
-            {
-                block_bool[a / 3, b / 3] = 1;
-                block_bool_full++;
-            }
-        }
-
-        //De random walk kiest twee random cijfers binnen een random blok, switcht deze als ze geswitcht mogen worden en update de evaluatiewaarde
-        void random_walk()
-        {
-            List<int> random_number = new List<int> { 0, 3, 6 };
-            Random random = new Random();
-            int random_x_block = random_number[random.Next(0, 3)];
-            int random_y_block = random_number[random.Next(0, 3)];
-            int random_x1 = random.Next(0, 3);
-            int random_x2 = random.Next(0, 3);
-            int random_y1 = random.Next(0, 3);
-            int random_y2 = random.Next(0, 3);
-
-            if (static_sudoku[random_x_block + random_x1, random_y_block + random_y1] == 0 && static_sudoku[random_x_block + random_x2, random_y_block + random_y2] == 0)
-            {
-                int evaluation_before_switch = evaluation(random_x_block + random_x1, random_y_block + random_y1, random_x_block + random_x2, random_y_block + random_y2);
-
-                int switching_num1 = sudoku[random_x_block + random_x1, random_y_block + random_y1];
-                int switching_num2 = sudoku[random_x_block + random_x2, random_y_block + random_y2];
-                sudoku[random_x_block + random_x1, random_y_block + random_y1] = switching_num2;
-                sudoku[random_x_block + random_x2, random_y_block + random_y2] = switching_num1;
-
-                int evaluation_after_switch = evaluation(random_x_block + random_x1, random_y_block + random_y1, random_x_block + random_x2, random_y_block + random_y2);
-
-                evaluation_value -= evaluation_before_switch;
-                evaluation_value += evaluation_after_switch;
-                switches += 1;
-            }
-        }
-
-        //Deze functie berekent de het aandeel van de twee rijen en kolommen van twee cijfers in de evaluatiewaarde. Dit wordt gebruikt om de switch te evalueren
-        int evaluation(int x1, int y1, int x2, int y2)
-        {
-            int local_evaluation = 0;
-            HashSet<int> contains1 = new HashSet<int>();
-            HashSet<int> contains2 = new HashSet<int>();
-
-            int current_number1 = 0;
-            int current_number2 = 0;
-
-            for (int x = 0; x < 9; x++)
-            {
-                current_number1 = sudoku[x, y1];
-                current_number2 = sudoku[x, y2];
-                contains1.Add(current_number1);
-                contains2.Add(current_number2);
-            }
-
-            local_evaluation += 9 + 9 - contains1.Count - contains2.Count;       //Voor de switch moet de waarde van de voorgaande rijen worden afgetrokken van de evaluatiewaarde, en hebben we het globale evaluatienummer nodig
-
-            contains1 = new HashSet<int>();
-            contains2 = new HashSet<int>();
-
-            for (int y = 0; y < 9; y++)
-            {
-                current_number1 = sudoku[x1, y];
-                current_number2 = sudoku[x2, y];
-                contains1.Add(current_number1);
-                contains2.Add(current_number2);
-            }
-
-            local_evaluation += 9 + 9 - contains1.Count - contains2.Count;       //Voor de switch moet de waarde van de voorgaande kolommen worden afgetrokken van de evaluatiewaarde, en hebben we het globale evaluatienummer nodig
-            return local_evaluation;
-        }
-
-        //Print de sudoku in een simpele vorm
+        //De fucnctie die de sudoku proint in een een simpele form 
         void printSudoku(int[,] sudoku)
         {
             for (int y = 0; y < 9; y++)
@@ -405,6 +105,84 @@ class Program
             }
         }
 
+        //Een functie die ervoor kan zorgen dat je een block "achteruit" gaat in de sudoku.
+        //Deze functie returnt de coordinaten van het nieuwe vakje.
+        Point block_achteruit(int x, int y)
+        {
+            bool een_ronde = true;                                          //De while-loop moet gegarandeert een keer uitgvoerd worden, anders gaan we geen vakje achteruit
+            if (x != 0 || y != 0)
+            {
+                while (statiche_sudoku[x, y] != 0 || een_ronde == true)     //Als we een vakje achteruit zijn gegaan, maar we zijn aangekomen bij een vakje waar we niet aan mogen zitten (statische_sudoku[x,y] != 0), moeten we nog een vakje achteruit totdat statische_sudoku[x,y] == 0
+                {
+                    if (x == 0)                                             //Als x = 0 zijn we bij de rand en moeten we een y omhoog en de x moet weer helemaal naar het meest rechter vakje
+                    {
+                        y = y - 1;
+                        x = 8;
+                    }
+                    else                                                    //Als x != 0 hoeven we alleen een vakje naar links, ofterwel x = x - 1 
+                    {
+                        x = x - 1;
+                    }
+                    een_ronde = false;                                      //Ervoor zorgen dat de while-loop niet voor eeuwig doorgaat
+                }
+            }
+            return new Point(x, y);                                         //De coordinaten van het vakje waar we zijn aangekomen returnen zodat die gebruikt kunnen wornden
+        }
+
+        //Een functie die cijfers oplopend probeert in te vullen in een vakje totdat er een cijfer ingevuld is die niet tegen de regels ingaat van sudoku.
+        //Als 1 t/m 9 niet mogelijk zijn zonder de regels van een sudoku te schenden returnt deze functie false, anders returnt die true
+        bool invullen(int ingevuld_nummer, bool nog_niet_correct, int x, int y)
+        {
+            while (ingevuld_nummer != 10 && nog_niet_correct)               //Zolang we geen toegestane waarde hebben gevonden blijven we een nieuwe waarde uitproberen door er een bij op te tellen. Als we echter bij 10 aankomen moeten we stoppen, want je mag geen 10 invullen in een sudoku.
+            {
+                nog_niet_correct = false;
+                sudoku[x, y] = ingevuld_nummer;                             //Ingevuld_nummer is 1 of 1 + huidige waarde van het vakje. Dit wordt meegegeven als argument voor de functie invullen.
+                for (int i = 0; i < 9; i++)                                 //Kijken of ingevuld_nummer mag in horizontale richting
+                {
+                    if (sudoku[i, y] == ingevuld_nummer && x != i)          //Als we in horizontale richting dezelfde waarde tegenkomen (natuurlijk niet als hij zichzelf tegenkomt) is het een illegale move en moeten we de huidige waarde verhogen
+                    {
+                        ingevuld_nummer++;
+                        nog_niet_correct = true;                            //Het vakje is nog niet correct ingevuld dus we moeten nog een ronde in de while loop 
+                        i = 10;
+                    }
+                }
+                if (nog_niet_correct == false)                              //Als we in horizontale richting geen dubbele waarden tegenkomen kijken we in verticale richting
+                {
+                    for (int j = 0; j < 9; j++)
+                    {
+                        if (sudoku[x, j] == ingevuld_nummer && y != j)      //Als we in verticale richting een illegale move tegenkomen moeten we de huidige waarde met 1 verhogen
+                        {
+                            ingevuld_nummer++;
+                            nog_niet_correct = true;                        //Het vakje is nog niet correct ingevuld dus we moeten nog een ronde in de while loop 
+                            j = 10;
+                        }
+                    }
+                }
+                if (nog_niet_correct == false)                              //Als alles goed gaat in horizontale en verticale richting, moeten we checken of er binnen de 3x3 blokken geen dubbele waarden staan
+                {
+                    double n = Math.Floor((double)x / 3);
+                    double m = Math.Floor((double)y / 3);
+                    for (int a = ((int)n * 3); a < (3 + n * 3); a++)
+                        for (int b = ((int)m * 3); b < (3 + m * 3); b++)
+                        {
+                            if (sudoku[a, b] == ingevuld_nummer && (a != x || b != y))      //Als we binnen een 3x3 block een illegale move tegenkomen, moeten we ingevuld_nummer met 1 verhogen
+                            {
+                                ingevuld_nummer++;
+                                nog_niet_correct = true;
+                                a = 10; b = 10;
+                            }
+                        }
+                }
+            }
+            if (ingevuld_nummer == 10)                                      //Als geen enkele waarde van 1 t/m 9 mogelijk is, moeten we terugwerken in de sudoku, zodat we hier later terug kunnen komen en wel een correct cijfer kunnen invullen
+            {
+                sudoku[x, y] = 0;                                           //Het huidige vakje wordt weer op nul gezet
+                return false;                                               //De functie returnt false om aan te geven dat we een vakje terug moeten en nog niet door kunnen
+            }
+            return true;                                                    //Als we een correcte waarde hubben gevonden returnt de functie true. Dit geeft aan dat we naar het volgende vakje kunnen. 
+        }
+
     }
 }
+
 
