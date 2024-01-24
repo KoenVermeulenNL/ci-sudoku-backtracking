@@ -10,8 +10,9 @@ class Programme
     {
         int[,] sudoku = new int[9, 9];
 
-        //Lijsten voor elk blokje waarin wordt bijgehouden welke waarden uitgesloten worden, zodat deze terug in het domein gezet kunnen worden als het
-        // domein leeg raakt en er dus een waardetoekenning in een eerder blokje veranderd moet worden.
+        //We maken een array van lijsten voor elk blokje. Hierin wordt bijgehouden welke waarden uitgesloten worden,
+        // zodat deze terug in het domein gezet kunnen worden als het domein leeg raakt
+        // en er dus een waardetoekenning in een eerder blokje veranderd moet worden.
         List<int>[,] uitgesloten = new List<int>[9, 9];
 
         List<int>[,] domeinen = new List<int>[9, 9];
@@ -47,6 +48,7 @@ class Programme
             }
         }
 
+        //De sudoku wordt ingevuld met de vastgestelde waarden, de rest krijgt waarde 0
         void vul_sudoku(string[] cijfers)
         {
             int index = 0;
@@ -55,8 +57,8 @@ class Programme
                 for (int i = 0; i < 9; i++)
                 {
                     sudoku[i, j] = int.Parse(cijfers[index]);
-                    domeinen[i, j] = new List<int>();
-                    uitgesloten[i, j] = new List<int>();
+                    domeinen[i, j] = new List<int>();           //De domein-lijsten worden geïnitieerd
+                    uitgesloten[i, j] = new List<int>();        //De lijsten die bijhouden welke waarden worden uitgesloten worden geïnitieerd
                     index++;
                 }
             }
@@ -89,10 +91,11 @@ class Programme
 
         void knoopconsistent(int i, int j)
         {
+            //Met onderstaande variabelen herkennen we in welk blok het vakje zig bevindt
             int blok_x = (int)Math.Floor(Convert.ToDouble(i) / 3);
             int blok_y = (int)Math.Floor(Convert.ToDouble(j) / 3);
 
-            //Alle waarden die al in het 3 bij 3 blok van het bekeken vakje zitten worden uit zijn domein gehaald
+            //Alle waarden die al in het 3 bij 3 blok van het bekeken vakje zitten worden uit zijn domein gehaald.
             for (int l = 0; l < 3; l++)
             {
                 for (int k = 0; k < 3; k++)
@@ -108,7 +111,7 @@ class Programme
                 }
             }
 
-            //Hetzelfde geldt voor alle waarden in de rij en colom van het vakje
+            //Hetzelfde geldt voor alle waarden in de rij en kolom van het vakje
             for (int k = 0; k < 9; k++)
             {
                 int waarde_1 = sudoku[i, k];
@@ -127,7 +130,8 @@ class Programme
         //In deze functie krijgen alle vakjes een waarde door middel van een Forward Checking algoritme
         void forward_checking()
         {
-            //Hiermee houden we bij of het invullen van een specifieke waarde er voor zorgt dat een domein van een ander nog oningevuld vakje leeg maakt
+            //Met illegale_move houden we bij of het invullen van een specifieke waarde er voor zorgt dat een domein van een ander nog oningevuld vakje leeg maakt.
+            // In dat geval is het een illegale move. 
             bool illegale_move = false;
             int waarde;
 
@@ -138,6 +142,7 @@ class Programme
                     //Zolang we niet te maken hebben met vakjes met lege domeinen blijven we ze invullen en domeinen updaten
                     if (domeinen[i, j].Count > 0)
                     {
+                        //Voor vakjes die niet al vanaf het begin vast staan doen we het volgende
                         if (domeinen[i, j][0] != -1)
                         {
                             illegale_move = false;
@@ -176,7 +181,7 @@ class Programme
                                     break;
                             }
 
-                            //Hetzelfde geldt voor de vakjes in dezelfde rij en colom.
+                            //Hetzelfde geldt voor de vakjes in dezelfde rij en kolom.
                             //Om tijd te besparen doen we dit alleen als we niet al weten dat het een illegale move is
                             if (illegale_move == false)
                             {
@@ -209,14 +214,16 @@ class Programme
                                 }
                             }
 
-                            //Als de move illegaal bleek te zijn
+                            //Als de move illegaal bleek te zijn:
                             if (illegale_move == true)
                             {
-                                sudoku[i, j] = 0;
-                                terugzetten(i, j, waarde);
-                                domeinen[i, j].Remove(waarde);
-                                uitgesloten[i, j].Add(waarde);
+                                
+                                sudoku[i, j] = 0;                   //De waarde toekenning wordt ongedaan gemaakt
+                                terugzetten(i, j, waarde);          //De waarde wordt weer teruggezet in de domeinen van alle vakjes waaruit het verwijderd was door deze move
+                                domeinen[i, j].Remove(waarde);      //De waarde wordt uit het domein van dit vakje verwijderd
+                                uitgesloten[i, j].Add(waarde);      //De waarde wordt toegevoegd aan de lijst met uitgesloten waarden van dit vakje
 
+                                //Door één vakje teug te springen en daarna meteen verder te gaan in de for-loop proberen we hetzelfde vakje opnieuw
                                 if (i > 0)
                                 {
                                     i -= 1;
@@ -230,9 +237,16 @@ class Programme
                             }
                         }
 
+                        //Voor vakjes die al vanaf het begin vast staan (en dus -1 in het domein hebben)
                         else
                         {
-                            if (illegale_move == true)
+                            //Als we vakjes aan het invullen zijn moeten deze vakjes overgeslagen worden. We doen dus niks en gaan verder in de for-loop
+                            if (illegale_move == false)
+                            { }
+
+                            //Als een vakje waar we mee bezig zijn een leeg domein krijgt en we dus terug moeten werken (in dit geval staat
+                            // illegale_move op true) worden de vaststaande vakjes op deze manier weer overgeslagen
+                            else 
                             {
                                 if (i > 1)
                                 {
@@ -245,15 +259,19 @@ class Programme
                                     i = 7;
                                 }
                             }
-                            else { }
                         }
                     }
 
+                    //Als blijkt dat het domein van het vakje waar we mee bezig zijn leeg raakt (en er dus iets moet veranderen in de al ingevulde vakjes)
+                    // gebeurt het volgende
                     else
                     {
+                        //Alle uitgesloten waarden worden teruggezet in het domein (aangezien we iets ervoor gaan veranderen en er dan opnieuw naar gaan kijken)
                         domeinen[i, j].AddRange(uitgesloten[i, j]);
                         uitgesloten[i, j].Clear();
 
+                        //Onderstaande while-loop zorgt ervoor dat we een vakje terug gaan (hier is de variabele a voor), of meer als we bij 
+                        // van tevoren vastgestelde vakjes komen (en de eerste waarde in het domein -1 is)
                         int a = 0;
                         while (a == 0 || domeinen[i, j][0] == -1)
                         {
@@ -269,12 +287,15 @@ class Programme
                             }
                         }
 
+                        //Nu updaten we het domein van dit al ingevulde vakje waarvan we er dus achter gekomen zijn dat de ingevulde waarde niet kan.
+                        // We doen hetzelfde als bij een illegale move
                         waarde = sudoku[i, j];
                         sudoku[i, j] = 0;
                         terugzetten(i, j, waarde);
                         domeinen[i, j].Remove(waarde);
                         uitgesloten[i, j].Add(waarde);
 
+                        //Net als eerder gaan we één stapje terug maar door meteen verder te gaan in de for-loop behandelen we hetzelfde vakje opnieuw
                         if (i == 0)
                         {
                             j -= 1;
@@ -289,11 +310,13 @@ class Programme
             }
         }
 
+        //Deze functie zet een waarde terug in de domeinen van de vakjes die deze waarden verloren door het toekennen ervan aan het vakje met [i, j]
         void terugzetten(int i, int j, int waarde)
         {
             int blok_x = (int)Math.Floor(Convert.ToDouble(i) / 3);
             int blok_y = (int)Math.Floor(Convert.ToDouble(j) / 3);
 
+            //Net als eerder zorgen we ervoor dat alleen domeinen van nog lege vakjes ge - update worden
             for (int l = j % 3; l < 3; l++)
             {
                 for (int k = 0; k < 3; k++)
@@ -305,13 +328,14 @@ class Programme
                         if (domeinen[punt_x, punt_y].Contains(waarde) == false)
                         {
                             domeinen[punt_x, punt_y].Add(waarde);
-                            knoopconsistent(punt_x, punt_y);
-                            domeinen[punt_x, punt_y].Sort();
+                            knoopconsistent(punt_x, punt_y);        //Het domein wordt wel weer knoopconsistent gemaakt zodat geen waarde wordt toegevoegd die niet mag
+                            domeinen[punt_x, punt_y].Sort();        //Het domein wordt gesorteerd zodat de laagste waarde vooraan blijft staan
                         }
                     }
                 }
             }
 
+            //We doen hetzelfde voor de rij en kolom
             for (int k = j + 1; k < 9; k++)
             {
                 if (domeinen[i, k].Contains(waarde) == false)
@@ -332,7 +356,8 @@ class Programme
                 }
             }
         }
-
+        
+        //Dit print een simpele vorm van de sudoku
         void printSudoku(int[,] sudoku)
         {
             for (int y = 0; y < 9; y++)
