@@ -59,7 +59,7 @@ class Programma
                     }
                     printSudoku(sudoku);
                     Console.WriteLine();
-                    punten.Clear(); 
+                    punten.Clear();
                 }
             }
         }
@@ -182,63 +182,57 @@ class Programma
             bool illegale_move = false;
             int waarde;
             int punten_index = 0;
-            bool stop_while_loop = false; 
 
             while (punten_index != -1) //klopt dit
             {
-                    //Zolang we niet te maken hebben met vakjes met lege domeinen blijven we ze invullen en domeinen updaten
-                    if (domeinen[i, j].Count > 0)
+                //Zolang we niet te maken hebben met vakjes met lege domeinen blijven we ze invullen en domeinen updaten
+                if (domeinen[i, j].Count > 0)
+                {
+                    if (domeinen[i, j][0] != -1)
                     {
-                        if (domeinen[i, j][0] != -1)
+                        illegale_move = false;
+
+                        //De waarde die wordt toegekend is het laagste getal in het domein
+                        waarde = domeinen[i, j][0];
+                        sudoku[i, j] = waarde;
+
+                        double blok_x = Math.Floor((double)i / 3);
+                        double blok_y = Math.Floor((double)j / 3);
+
+                        //Voor de andere vakjes in het blok van het vakje wordt de waarde uit het domein gehaald
+                        for (int l = ((int)blok_y * 3); l < (3 + blok_y * 3); l++)
                         {
-                            illegale_move = false;
-
-                            //De waarde die wordt toegekend is het laagste getal in het domein
-                            waarde = domeinen[i, j][0];
-                            sudoku[i, j] = waarde;
-
-                            double blok_x = Math.Floor((double)i / 3);                                                      //////////////////
-                            double blok_y = Math.Floor((double)j / 3);                                                      ///////////////
-
-                            //int blok_x = (int)Math.Floor(Convert.ToDouble(i) / 3);
-                            //int blok_y = (int)Math.Floor(Convert.ToDouble(j) / 3);
-
-                            //Voor de andere vakjes in het blok van het vakje wordt de waarde uit het domein gehaald
-                            for (int l = ((int)blok_y * 3); l < (3 + blok_y * 3); l++)                                                              ///////////////
+                            for (int k = ((int)blok_x * 3); k < (3 + blok_x * 3); k++)
                             {
-                                for (int k = ((int)blok_x * 3); k < (3 + blok_x * 3); k++)                                          ///////////////////////
+                                //Onderstaande restrictie zorgt ervoor dat alleen domeinen van nog lege vakjes ge-update worden
+                                if (!punten.Contains(new Point(k, l)))
                                 {
-                                    //Onderstaande restrictie zorgt ervoor dat alleen domeinen van nog lege vakjes ge-update worden
-                                    if (!punten.Contains(new Point(k,l)))                                                                   ///////////////////
+                                    if (domeinen[k, l].Contains(waarde) && (l != j || k != i))
                                     {
-                                        //int punt_x = blok_x * 3 + k;
-                                        //int punt_y = blok_y * 3 + l;
-                                        if (domeinen[k, l].Contains(waarde) && (l != j || k != i))                                      /////////////////
-                                        {
-                                            domeinen[k, l].Remove(waarde);
+                                        domeinen[k, l].Remove(waarde);
 
-                                            //Als een domein door het verwijderen van de waarde leeg raakt hebben we te maken met een illegale move
-                                            if (domeinen[k, l].Count == 0)
-                                            {
-                                                illegale_move = true;
-                                                break;
-                                            }
+                                        //Als een domein door het verwijderen van de waarde leeg raakt hebben we te maken met een illegale move
+                                        if (domeinen[k, l].Count == 0)
+                                        {
+                                            illegale_move = true;
+                                            break;
                                         }
                                     }
                                 }
-                                if (illegale_move)
-                                    break;
                             }
+                            if (illegale_move)
+                                break;
+                        }
 
-                            //Hetzelfde geldt voor de vakjes in dezelfde rij en colom.
-                            //Om tijd te besparen doen we dit alleen als we niet al weten dat het een illegale move is
-                            if (illegale_move == false)
+                        //Hetzelfde geldt voor de vakjes in dezelfde rij en colom.
+                        //Om tijd te besparen doen we dit alleen als we niet al weten dat het een illegale move is
+                        if (illegale_move == false)
+                        {
+                            for (int k = 0; k < 9; k++)
                             {
-                                for (int k = 0; k < 9; k++)
+                                if (!punten.Contains(new Point(i, k)))
                                 {
-                                if (!punten.Contains(new Point(i, k)))                                                              /////////////////////////   
-                                {
-                                    if (domeinen[i, k].Contains(waarde) && k != j)                                                          /////////////////
+                                    if (domeinen[i, k].Contains(waarde) && k != j)
                                     {
                                         domeinen[i, k].Remove(waarde);
                                         if (domeinen[i, k].Count == 0)
@@ -248,15 +242,15 @@ class Programma
                                         }
                                     }
                                 }
-                                }
                             }
-                            if (illegale_move == false) 
+                        }
+                        if (illegale_move == false)
+                        {
+                            for (int k = 0; k < 9; k++)
                             {
-                            for (int k = 0; k < 9; k++)                 
-                            {
-                                if (!punten.Contains(new Point(k, j)))                                                  ////////////////////
+                                if (!punten.Contains(new Point(k, j)))
                                 {
-                                    if (domeinen[k, j].Contains(waarde) && k != i)                                              /////////////////
+                                    if (domeinen[k, j].Contains(waarde) && k != i)
                                     {
                                         domeinen[k, j].Remove(waarde);
                                         if (domeinen[k, j].Count == 0)
@@ -267,99 +261,29 @@ class Programma
                                     }
                                 }
                             }
-                            }
-                            if (illegale_move == false)
-                            {
-                                //nog_geen_waarde = false;
-                                punten_index = -1;
-
-                                //if (stop_while_loop)
-                                   // punten_index = -1; 
-                               // if (punten_index != -1 && (punten.Count - punten_index) >=0 && (punten.Count - punten_index) < punten.Count)
-                                //{
-                                //    i = punten[punten.Count - punten_index].X;
-                                //    j = punten[punten.Count - punten_index].Y;
-                                //}
-
-                            }
+                        }
+                        if (illegale_move == false)
+                        {
+                            punten_index = -1;
+                        }
 
                         //Als de move illegaal bleek te zijn 
-                            if (illegale_move == true)
-                            {
-                                sudoku[i, j] = 0;
-                                terugzetten(i, j, waarde);
-                                domeinen[i, j].Remove(waarde);
-                                uitgesloten[i, j].Add(waarde);
-
-                                    /*if (i > 0)
-                                    {
-                                        i -= 1;
-                                    }
-
-                                    else
-                                    {
-                                        j -= 1;
-                                        i = 8;
-                                    }*/
-                            }
-                        }
-
-                    /*else
-                    {
                         if (illegale_move == true)
                         {
-                            if (i > 1)
-                            {
-                                i -= 2;
-                            }
-
-                            else
-                            {
-                                j -= 1;
-                                i = 7;
-                            }
+                            sudoku[i, j] = 0;
+                            terugzetten(i, j, waarde);
+                            domeinen[i, j].Remove(waarde);
+                            uitgesloten[i, j].Add(waarde);
                         }
-                        else { }
-                    }*/
                     }
+                }
 
-                    else
-                    {
-                        domeinen[i, j].AddRange(uitgesloten[i, j]);
-                        uitgesloten[i, j].Clear();
+                else
+                {
+                    domeinen[i, j].AddRange(uitgesloten[i, j]);
+                    uitgesloten[i, j].Clear();
 
-                    /*int a = 0;
-                    while (a == 0 || domeinen[i, j][0] == -1)
-                    {
-                        a = 1;
-                        if (i == 0)
-                        {
-                            j -= 1;
-                            i = 8;
-                        }
-                        else
-                        {
-                            i -= 1;
-                        }
-                    }*/
-                    /*if (stop_while_loop == false)
-                    {
-                        punten_index += 1;
-                    }
-                    if (punten_index != -1 && (punten.Count - punten_index) >= 0 && (punten.Count - punten_index) < punten.Count)
-                    {
-                        i = punten[punten.Count - punten_index].X;
-                        j = punten[punten.Count - punten_index].Y;
-
-                    }
-
-                    if (punten.Count > 0)                                                                                               ////////////
-                    {
-                        punten.RemoveAt(punten.Count - 1);
-                        stop_while_loop = true;
-                    }*/
-
-                    if (punten.Count > 0)                                                                                               ////////////
+                    if (punten.Count > 0)
                     {
                         punten.RemoveAt(punten.Count - 1);
                     }
@@ -368,29 +292,15 @@ class Programma
                     {
                         i = punten[punten.Count - 1].X;
                         j = punten[punten.Count - 1].Y;
-
                     }
 
-                        waarde = sudoku[i, j];
-                        sudoku[i, j] = 0;
-                        terugzetten(i, j, waarde);
-                        domeinen[i, j].Remove(waarde);
-                        uitgesloten[i, j].Add(waarde);
+                    waarde = sudoku[i, j];
+                    sudoku[i, j] = 0;
+                    terugzetten(i, j, waarde);
+                    domeinen[i, j].Remove(waarde);
+                    uitgesloten[i, j].Add(waarde);
+                }
 
-
-                        //nog_geen_waarde = false; 
-
-                        /*if (i == 0)
-                        {
-                            j -= 1;
-                            i = 8;
-                        }
-                        else
-                        {
-                            i -= 1;
-                        }*/
-                    }
-                
             }
         }
 
@@ -400,17 +310,14 @@ class Programma
             double blok_x = Math.Floor((double)i / 3);
             double blok_y = Math.Floor((double)j / 3);
 
-            //int blok_x = (int)Math.Floor(Convert.ToDouble(i) / 3);
-            //int blok_y = (int)Math.Floor(Convert.ToDouble(j) / 3);
-
             //Voor de andere vakjes in het blok van het vakje wordt de waarde uit het domein gehaald
             for (int l = ((int)blok_y * 3); l < (3 + blok_y * 3); l++)
             {
                 for (int k = ((int)blok_x * 3); k < (3 + blok_x * 3); k++)
                 {
-                    if (!punten.Contains(new Point(k, l)))                                                                                      ///////////////
+                    if (!punten.Contains(new Point(k, l)))
                     {
-                        if (domeinen[k, l].Contains(waarde) == false && (l != j || k != i))                                         ////////////////
+                        if (domeinen[k, l].Contains(waarde) == false && (l != j || k != i))
                         {
                             domeinen[k, l].Add(waarde);
                             knoopconsistent(k, l);
@@ -423,9 +330,9 @@ class Programma
 
             for (int k = 0; k < 9; k++)
             {
-                if (!punten.Contains(new Point(i, k)))                                                                          ///////////
+                if (!punten.Contains(new Point(i, k)))
                 {
-                    if (domeinen[i, k].Contains(waarde) == false && k != j)                                                 /////////////
+                    if (domeinen[i, k].Contains(waarde) == false && k != j)
                     {
                         domeinen[i, k].Add(waarde);
                         knoopconsistent(i, k);
@@ -438,7 +345,7 @@ class Programma
             {
                 if (!punten.Contains(new Point(k, j)))
                 {
-                    if (domeinen[k, j].Contains(waarde) == false && k != i)                             ////////////////
+                    if (domeinen[k, j].Contains(waarde) == false && k != i)
                     {
                         domeinen[k, j].Add(waarde);
                         knoopconsistent(k, j);
@@ -461,8 +368,5 @@ class Programma
         }
     }
 }
-
-
-
 
 
