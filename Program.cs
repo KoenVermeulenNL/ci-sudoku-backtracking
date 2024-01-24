@@ -152,7 +152,7 @@ class Program
                     for (int j = 0; j < 9; j++)
                     {
                         if (sudoku[x, j] == ingevuld_nummer && y != j)      //Als we in verticale richting een illegale move tegenkomen moeten we de huidige waarde met 1 verhogen
-                        {
+                        { 
                             ingevuld_nummer++;
                             nog_niet_correct = true;                        //Het vakje is nog niet correct ingevuld dus we moeten nog een ronde in de while loop 
                             j = 10;

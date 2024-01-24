@@ -20,8 +20,8 @@ class Programma
 
         List<int>[,] domeinen = new List<int>[9, 9];
 
-        List<Point> punten = new List<Point>();
-
+        List<Point> punten = new List<Point>();                                                                 //Dit is een lijst met punten die bijhoudt in welke volgorde je de sudoku vakjes aan het invullen bent. Dit is belangrijk omdat we bij de most-constrained-variable (MCV) heuristiek niet meer van links boven naar
+                                                                                                                //rechts onder werken, maar kriskras door de sudoku wandelen. Als bij een random vakje geconcludeert wordt dat je terug moet naar het vorige vakje, moet wel bijgehouden zijn wat het vorige vakje was.
 
         //Alles gebeurt in de functie import()
         import();
@@ -45,17 +45,19 @@ class Programma
                     printSudoku(sudoku);
                     Console.WriteLine();
 
-                    bool sudoku_not_solved = true;
-                    while (sudoku_not_solved)
+                    bool sudoku_niet_opgelost = true;
+                    while (sudoku_niet_opgelost)                                                                //Totdat de sudoku opgelost is moeten we forward checking blijven gebruiken totdat alle vakjes correct ingevuld zijn in de sudoku
                     {
-                        Point coordinaten = vind_vakje();
-                        if (coordinaten.X != -1)
+                        Point coordinaten = vind_vakje();                                                       //Voordat vakjes van de sudoku ingevuld kunnen worden, moeten we eerst achterhalen in welke volgorde we ze moeten invullen. In dit deel
+                                                                                                                //van de opdracht moest dat gedaan worden volgens de most-constrained-variable (MCV) heuristiek. Hier is de functie vind_vakje verantwoordelijk voor
+                        if (coordinaten.X != -1)                                                                //Vind_vakje returnt een Punt met een X en Y coordinaat. Zolang de coordinaten niet -1 zijn, weten we dat de sudoku nog niet opgelost is,
+                                                                                                                //en moeten we waarden gaan invullen voor het gevonde vakje. In de functie vind_vakje zal duidelijk worden waarom -1 betekent dat de sudoku opelost is.
                         {
-                            punten.Add(coordinaten);
-                            forward_checking(coordinaten.X, coordinaten.Y);
+                            punten.Add(coordinaten);                                                            //Het vakje dat ingevuld gaat worden wordt toegevoegd aan de lijst, zodat we bijhouden in welke volgorde we welke punten bijlangs gaan
+                            forward_checking(coordinaten.X, coordinaten.Y);                                     //Forward checking wordt gebruikt om het vakje waar we zijn aangebroken in te vullen
                         }
-                        if (coordinaten.X == -1)
-                            sudoku_not_solved = false;
+                        if (coordinaten.X == -1)                                                                //Als de coordinaten -1 zijn weten we dat de sudoku opgelost is en moeten we de while loop uit zodat de sudoku geprint kan worden
+                            sudoku_niet_opgelost = false;
                     }
                     printSudoku(sudoku);
                     Console.WriteLine();
@@ -141,34 +143,35 @@ class Programma
             }
         }
 
+        //Deze functie is verantwoordelijk om te vinden welk volgende vakje we moeten invullen. Dit wordt bepaald volgens de most-constrained-variable (MCV) heuristiek. We doen dit
+        //door de domeinen te checken van elk vakje en het vakje te kiezen met het kleinste domein (minste opties van mohelijke cijfers die ingevuld kunnen worden in een vakje).
         Point vind_vakje()
         {
-            int domein_teller = 10;
+            int domein_teller = 10;                                                                             //We moeten een startpunt hebben om de domeinen te vergelijken. We hebben 10 gekozen omdat de domeinen altijd van grootte 9 of kleiner zijn, dus er wordt altijd een vakje gekozen.
             int a = 0;
             int b = 0;
-            int aantal_ingevuld = 0;
+            int aantal_ingevuld = 0;                                                                            //Aantal ingevuld houdt bij hoeveel vakjes al correct ingevuld zijn. Op het moment dat deze counter 81 wordt, weten we dat de sudoku ophelost is. 
 
             for (int y = 0; y < 9; y++)
             {
                 for (int x = 0; x < 9; x++)
                 {
-                    if (domeinen[x, y].Count > 0)
+                    if (domein_teller > domeinen[x, y].Count && domeinen[x, y][0] != -1 && sudoku[x, y] == 0)   //Hier wordt gekozen welk vakje als volgende bezocht moet worden. Restrictie 1: alleen een vakje kiezen die een kleiner domein heeft dan het vorige vakje met het kleinste domein ((MCV) heuristiek).
+                                                                                                                //Restructie 2: Alleen naar vakjes kijken die veranderdt mogen worden (vakjes met domeinen[x, y][0] == -1 zijn vakjes waar je niet aan mag zitten omdat die gegeven waarden hadden vanaf het begin).
+                                                                                                                //Restrictie 3: Alleen vakjes kiezen die nog geen waarde hebben gekregen oftewel sudoku[x, y] == 0.
                     {
-                        if (domein_teller > domeinen[x, y].Count && domeinen[x, y][0] != -1 && sudoku[x, y] == 0)
-                        {
-                            a = x;
-                            b = y;
-                            domein_teller = domeinen[x, y].Count;
-                        }
-                        if (sudoku[x, y] != 0)
-                        {
-                            aantal_ingevuld++;
-                        }
-                        if (aantal_ingevuld == 81)
-                        {
-                            a = -1;
-                            b = -1;
-                        }
+                        a = x;                                                                                  //Nieuwe coordinaten opslaan
+                        b = y;
+                        domein_teller = domeinen[x, y].Count;                                                   //Het kleinste domein tot nu toe updaten
+                    }
+                    if (sudoku[x, y] != 0)                                                                      //Als een vakje ingevuld is, tell dan een op bij aantal_ingevuld, zodat we weten wanneer de sudoku compleet ingevuld is
+                    {
+                        aantal_ingevuld++;
+                    }
+                    if (aantal_ingevuld == 81)                                                                  //Als de gehele sudoku ingevuld is, return -1,-1 als coordinaten
+                    {
+                        a = -1;
+                        b = -1;
                     }
                 }
             }
