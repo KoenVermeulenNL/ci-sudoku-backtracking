@@ -14,8 +14,9 @@ class Programma
     {
         int[,] sudoku = new int[9, 9];
 
-        //Lijsten voor elk blokje waarin wordt bijgehouden welke waarden uitgesloten worden, zodat deze terug in het domein gezet kunnen worden als het 
-        // domein leeg raakt en er dus een waardetoekenning in een eerder blokje veranderd moet worden.
+        //We maken een array van lijsten voor elk blokje. Hierin wordt bijgehouden welke waarden uitgesloten worden,
+        //zodat deze terug in het domein gezet kunnen worden als het domein leeg raakt
+        //en er dus een waardetoekenning in een eerder blokje veranderd moet worden.
         List<int>[,] uitgesloten = new List<int>[9, 9];
 
         List<int>[,] domeinen = new List<int>[9, 9];
@@ -66,6 +67,7 @@ class Programma
             }
         }
 
+        //De sudoku wordt ingevuld met de vastgestelde waarden, de rest krijgt waarde 0
         void vul_sudoku(string[] cijfers)
         {
             int index = 0;
@@ -74,8 +76,8 @@ class Programma
                 for (int i = 0; i < 9; i++)
                 {
                     sudoku[i, j] = int.Parse(cijfers[index]);
-                    domeinen[i, j] = new List<int>();
-                    uitgesloten[i, j] = new List<int>();
+                    domeinen[i, j] = new List<int>();                   //De domein-lijsten worden geïnitieerd
+                    uitgesloten[i, j] = new List<int>();                //De lijsten die bijhouden welke waarden worden uitgesloten worden geïnitieerd
                     index++;
                 }
             }
@@ -108,6 +110,7 @@ class Programma
 
         void knoopconsistent(int i, int j)
         {
+            //Met onderstaande variabelen herkennen we in welk blok het vakje zig bevindt
             int blok_x = (int)Math.Floor(Convert.ToDouble(i) / 3);
             int blok_y = (int)Math.Floor(Convert.ToDouble(j) / 3);
 
@@ -127,7 +130,7 @@ class Programma
                 }
             }
 
-            //Hetzelfde geldt voor alle waarden in de rij en colom van het vakje
+            //Hetzelfde geldt voor alle waarden in de rij en kolom van het vakje
             for (int k = 0; k < 9; k++)
             {
                 int waarde_1 = sudoku[i, k];
@@ -178,20 +181,23 @@ class Programma
             return new Point(a, b);
         }
 
-        //In deze functie krijgen alle vakjes een waarde door middel van een Forward Checking algoritme
+        //In deze functie krijgt een aangewezen vakje (bepaard door de coordinaten i en j die als argument meegegeven zijn aan de functie) een waarde door middel van een Forward Checking algoritme
         void forward_checking(int i, int j)
         {
-            //Hiermee houden we bij of het invullen van een specifieke waarde er voor zorgt dat een domein van een ander nog oningevuld vakje leeg maakt
+            //Hiermee houden we bij of het invullen van een specifieke waarde er voor zorgt dat een domein van een ander nog oningevuld vakje leeg maakt (dit heet bij ons een illegale move)
             bool illegale_move = false;
             int waarde;
-            int punten_index = 0;
 
-            while (punten_index != -1) //klopt dit
+            //Een int die bijhoudt of de waarde die ingevuld is in een vakje niet leidt tot een illegale move. Zolang een vakje niet correct ingevuld is, blijft de int 0. Als de ingevulde waarde
+            //geen ander domein 0 maakt, is het een legale move en wordt de int -1
+            int correct = 0;  
+            
+            while (correct != -1)                                                   //Zolang het geen legale move is moeten we door proberen totdat we het vakje correct ingevuld hebben
             {
-                //Zolang we niet te maken hebben met vakjes met lege domeinen blijven we ze invullen en domeinen updaten
+                //Zolang we niet te maken hebben met een vakje met een leeg domein blijven we het vakje invullen en domeinen updaten
                 if (domeinen[i, j].Count > 0)
                 {
-                    if (domeinen[i, j][0] != -1)
+                    if (domeinen[i, j][0] != -1)                                    //Alleen aan vakjes zitten die niet vaststaan vanaf het begin. In princiepe hoeft deze restrictie er niet in te staan, want hier wordt al op gefiltert in vind_vakje. 
                     {
                         illegale_move = false;
 
@@ -207,7 +213,7 @@ class Programma
                         {
                             for (int k = ((int)blok_x * 3); k < (3 + blok_x * 3); k++)
                             {
-                                //Onderstaande restrictie zorgt ervoor dat alleen domeinen van nog lege vakjes ge-update worden
+                                //Onderstaande restrictie zorgt ervoor dat alleen domeinen van nog lege vakjes ge-update worden. Als het vakje in de punten lijst staan weten we dat we er al een keer langsgegaan zijn. 
                                 if (!punten.Contains(new Point(k, l)))
                                 {
                                     if (domeinen[k, l].Contains(waarde) && (l != j || k != i))
@@ -265,27 +271,33 @@ class Programma
                                 }
                             }
                         }
-                        if (illegale_move == false)
+                        if (illegale_move == false)                         //Als we alle domeinen hebben gecheckt die beinvloed worden door de ingevulde waarde en er geen lege domeinen ontstaan is het een legale move en kunnen we de while loop uit
                         {
-                            punten_index = -1;
+                            correct = -1;
                         }
 
-                        //Als de move illegaal bleek te zijn 
+                        //Als de move illegaal bleek te zijn: 
                         if (illegale_move == true)
                         {
-                            sudoku[i, j] = 0;
-                            terugzetten(i, j, waarde);
-                            domeinen[i, j].Remove(waarde);
-                            uitgesloten[i, j].Add(waarde);
+                            sudoku[i, j] = 0;                   //De waarde toekenning wordt ongedaan gemaakt
+                            terugzetten(i, j, waarde);          //De waarde wordt weer teruggezet in de domeinen van alle vakjes waaruit het verwijderd was door deze move
+                            domeinen[i, j].Remove(waarde);      //De waarde wordt uit het domein van dit vakje verwijderd
+                            uitgesloten[i, j].Add(waarde);      //De waarde wordt toegevoegd aan de lijst met uitgesloten waarden van dit vakje
                         }
                     }
                 }
 
+                //Als blijkt dat het domein van het vakje waar we mee bezig zijn leeg raakt (en er dus iets moet veranderen in de al ingevulde vakjes) gebeurt het volgende:
                 else
                 {
+                    //Alle uitgesloten waarden worden teruggezet in het domein (aangezien we iets ervoor gaan veranderen en er dan opnieuw naar gaan kijken)
                     domeinen[i, j].AddRange(uitgesloten[i, j]);
                     uitgesloten[i, j].Clear();
 
+                    //Omdat alle mogelijke waarden van een vakje uitgeprobeert zijn, maar geen enkele correct is, moeten we terug naar het vakje waar we waren voor het huidige vakje.
+                    //Dit doen we door het huidige vakje te verwijderen uit de lijst en de coordinaten aan te passen, door het laatste punt van de lijst te gebruiken. 
+                    //Het verwijderen van het huidige vakje uit de lijst kan omdat we de MCV heuristiek dynamisch toepassen. Op het moment dat een vakje correct ingevuld is, hoeven we niet meer te weten welk vakje erna kwam,
+                    //omdat we opnieuw het vakje met het laagste domein moeten zoeken. 
                     if (punten.Count > 0)
                     {
                         punten.RemoveAt(punten.Count - 1);
@@ -297,6 +309,7 @@ class Programma
                         j = punten[punten.Count - 1].Y;
                     }
 
+                    //Nu updaten we het domein van dit al ingevulde vakje waarvan we er dus achter gekomen zijn dat de ingevulde waarde niet kan. We doen hetzelfde als bij een illegale move
                     waarde = sudoku[i, j];
                     sudoku[i, j] = 0;
                     terugzetten(i, j, waarde);
