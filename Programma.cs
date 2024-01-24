@@ -1,4 +1,4 @@
-﻿//2.3 forward checking part 2
+﻿//2.3 forward checking part 2   
 
 using System;
 using System.Collections.Generic;
