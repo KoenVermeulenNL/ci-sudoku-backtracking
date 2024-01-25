@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "eTnqDsb0hXOm1YIW5zXX8+soX6VEUM0ucb9JJdhZjKbb40bhb071FhCZIC5q24N+WfmKG+fi0FPYgSSjtdpiTg==",
+  "dgSpecHash": "YpwvyosKXY4chescGTOda10jjGrgMtIH/u5v/2Je351pmYqViDuAhNyLx87+kqKnVv+e4Usgs0NyULAF/tXkFA==",
   "success": true,
-  "projectFilePath": "C:\\Users\\koenv\\Documents\\Projects\\UU\\Compi\\ci-practicum1\\CI-Practicum1\\CI-Practicum1.csproj",
+  "projectFilePath": "C:\\Users\\koenv\\Documents\\Projects\\UU\\Compi\\ci-sudoku-backtracking\\CI-Practicum1.csproj",
   "expectedPackageFiles": [],
   "logs": []
 }

@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 
 class Programme
 {
-    static void Main()
+    static void Main2()
     {
         int[,] sudoku = new int[9, 9];
 
@@ -22,6 +22,7 @@ class Programme
 
         void import()
         {
+            int sudoku_nr = 0;
             string[] cijfers;
             string regel;
             char[] separators = { ' ' };
@@ -33,6 +34,11 @@ class Programme
                 cijfers = regel.Split(separators, StringSplitOptions.RemoveEmptyEntries);
                 if (cijfers.Length == 81)
                 {
+                    //start de timer
+                    sudoku_nr++;
+                    double totalTime = 0;
+                    var timer = System.Diagnostics.Stopwatch.StartNew();
+
                     vul_sudoku(cijfers);
                     maak_domeinen();
 
@@ -41,7 +47,14 @@ class Programme
 
                     forward_checking();
 
-                    printSudoku(sudoku);
+                    //Visualisatie
+                    timer.Stop();
+                    totalTime += Math.Round(timer.Elapsed.TotalMilliseconds);
+                    
+                    //Nadat de hele sudoku correct is ingevuld, wordt de sudoku geprint
+                    printSudoku(sudoku);                                               
+                    Console.WriteLine("Sudoku nummer " + sudoku_nr + ". Gevonden in " + totalTime + "ms");
+                    
                     Console.WriteLine();
                     Console.WriteLine();
                 }

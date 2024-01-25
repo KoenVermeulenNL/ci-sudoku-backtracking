@@ -13,11 +13,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\koenv\\Documents\\Projects\\UU\\Compi\\ci-practicum1\\CI-Practicum1\\CI-Practicum1.csproj",
+      "projectUniqueName": "C:\\Users\\koenv\\Documents\\Projects\\UU\\Compi\\ci-sudoku-backtracking\\CI-Practicum1.csproj",
       "projectName": "CI-Practicum1",
-      "projectPath": "C:\\Users\\koenv\\Documents\\Projects\\UU\\Compi\\ci-practicum1\\CI-Practicum1\\CI-Practicum1.csproj",
+      "projectPath": "C:\\Users\\koenv\\Documents\\Projects\\UU\\Compi\\ci-sudoku-backtracking\\CI-Practicum1.csproj",
       "packagesPath": "C:\\Users\\koenv\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\koenv\\Documents\\Projects\\UU\\Compi\\ci-practicum1\\CI-Practicum1\\obj\\",
+      "outputPath": "C:\\Users\\koenv\\Documents\\Projects\\UU\\Compi\\ci-sudoku-backtracking\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\koenv\\AppData\\Roaming\\NuGet\\NuGet.Config",

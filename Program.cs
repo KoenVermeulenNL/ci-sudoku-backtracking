@@ -13,8 +13,8 @@ using System.Timers;
 using System.Xml;
 
 class Program
-{
-    static void Main()
+{ 
+    static void Main1()
     {
         int[,] sudoku = new int[9, 9];                                                  //De sudoku die ingevuld gaat worden
         int[,] statiche_sudoku = new int[9, 9];                                         //Een "statische" sudoku om bij te houden welke cijfers in de sudoku vanaf het begin al vaststaan
@@ -25,6 +25,7 @@ class Program
         void backtracking()
         {
             int index;
+            int sudoku_nr = 0;
             string[] woorden;
             char[] separators = { ' ' };
             string regel;
@@ -37,6 +38,12 @@ class Program
                 woorden = regel.Split(separators, StringSplitOptions.RemoveEmptyEntries);
                 if (woorden.Length == 81)
                 {
+                    //start de timer
+                    sudoku_nr++;
+                    double totalTime = 0;
+                    var timer = System.Diagnostics.Stopwatch.StartNew();
+
+
                     index = 0;
                     for (int y = 0; y < 9; y++)                                         //In deze dubbele for-loop worden de sudokus ingevuld van de textfile
                         for (int x = 0; x < 9; x++)
@@ -50,6 +57,8 @@ class Program
                     Console.WriteLine();
                     printSudoku(statiche_sudoku);                                       //hier wordt de oningevulde sudoku geprint
                     Console.WriteLine();
+
+                    
 
                     for (int y = 0; y < 9; y++)                                         //In deze dubbele for-loop worden alle vakjes een voor een ingevuld door middel van chronological backtracking
                         for (int x = 0; x < 9; x++)
@@ -88,7 +97,10 @@ class Program
                             }
                         }
                     //Visualisatie
+                    timer.Stop();
+                    totalTime += Math.Round(timer.Elapsed.TotalMilliseconds);
                     printSudoku(sudoku);                                                //Nadat de hele sudoku correct is ingevuld, wordt de sudoku geprint
+                    Console.WriteLine("Sudoku nummer " + sudoku_nr + ". Gevonden in " + totalTime + "ms");
                 }
             }
         }
